@@ -30,7 +30,7 @@ export default function AcceptInvitePage() {
   }
 
   return (
-    <AuthFrame title="Join your school" subtitle="Set up your teacher account to access VedaAI.">
+    <AuthFrame title="Join your school" subtitle="Set up your teacher account to access PaperPilot.">
       <form onSubmit={submit} className="space-y-4">
         <div><Label htmlFor="name">Name</Label><Input required id="name" name="name" /></div>
         <div><Label htmlFor="email">Email</Label><Input required id="email" name="email" type="email" /></div>

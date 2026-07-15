@@ -9,7 +9,7 @@ async function startServer() {
   await connectDatabase();
   const server = createServer(createApp());
   createSocketServer(server);
-  server.listen(env.PORT, () => logger.info({ port: env.PORT }, "VedaAI API listening"));
+  server.listen(env.PORT, () => logger.info({ port: env.PORT }, "PaperPilot API listening"));
 }
 
 startServer().catch((error) => {

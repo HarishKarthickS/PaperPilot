@@ -1,7 +1,7 @@
 export const swaggerDocument = {
   openapi: "3.0.3",
   info: {
-    title: "VedaAI API",
+    title: "PaperPilot API",
     version: "1.0.0",
     description: "Teacher assessment generation, revision and export API.",
   },

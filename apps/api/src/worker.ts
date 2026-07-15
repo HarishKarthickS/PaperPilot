@@ -6,7 +6,7 @@ import { startWorkers } from "./workers/processors.js";
 async function startWorkerProcess() {
   await connectDatabase();
   const workers = startWorkers();
-  logger.info({ count: workers.length }, "VedaAI workers listening");
+  logger.info({ count: workers.length }, "PaperPilot workers listening");
 
   // Start a lightweight HTTP server so Render's free Web Service tier doesn't kill the container
   // and so you can ping it to prevent cold starts.

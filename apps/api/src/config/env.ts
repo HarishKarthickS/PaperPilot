@@ -34,7 +34,7 @@ const envSchema = z.object({
   OPENROUTER_API_KEY: optionalSetting(),
   OPENROUTER_MODEL: optionalSetting(),
   OPENROUTER_APP_URL: z.string().url().default("http://localhost:3000"),
-  OPENROUTER_APP_NAME: z.string().default("VedaAI"),
+  OPENROUTER_APP_NAME: z.string().default("PaperPilot"),
   UPLOADTHING_TOKEN: optionalSetting(),
   SENTRY_DSN: optionalSetting(),
   LOG_LEVEL: z.string().default("info"),

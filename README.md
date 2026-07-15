@@ -1,6 +1,6 @@
-# VedaAI
+# PaperPilot
 
-VedaAI is a teacher-facing AI assessment creator built for the VedaAI Full Stack Engineering assignment. It follows the supplied Figma screens with a quiet grayscale workspace, focused orange actions, a mobile navigation treatment, and a document-style question paper view.
+PaperPilot is a teacher-facing AI assessment creator with a quiet grayscale workspace, focused orange actions, a mobile navigation treatment, and a document-style question paper view.
 
 ## What Is Included
 
@@ -30,7 +30,7 @@ flowchart LR
 
 The API creates durable assignment and run records before queueing work. Workers never expose an LLM response directly: generated JSON is schema-constrained at OpenRouter, parsed with shared Zod contracts, checked against required marks and question counts, then written as an immutable revision.
 
-Files use UploadThing private ACL. The database stores file keys; browser access goes through authenticated VedaAI endpoints that create short-lived signed URLs after workspace authorization. This matters for uploaded learning material and teacher answer keys.
+Files use UploadThing private ACL. The database stores file keys; browser access goes through authenticated PaperPilot endpoints that create short-lived signed URLs after workspace authorization. This matters for uploaded learning material and teacher answer keys.
 
 ## Repository
 
