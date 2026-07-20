@@ -10,6 +10,7 @@ import {
   FileText,
   LayoutGrid,
   Menu,
+  MessageCircle,
   PieChart,
   Plus,
   Settings,
@@ -77,13 +78,14 @@ const sidebarNavigation: NavigationItem[] = [
   { label: "My Groups", href: "/workspace/members", icon: Contact },
   { label: "Assignments", href: "/assignments", icon: FileText },
   { label: "AI Teacher's Toolkit", href: "/assignments/new", icon: Book },
+  { label: "Study Chat", href: "/study-chat", icon: MessageCircle },
   { label: "My Library", href: "/library", icon: PieChart },
 ];
 
 const mobileNavigation = [
   { label: "Home", href: "/dashboard", icon: LayoutGrid },
   { label: "Assignments", href: "/assignments", icon: FileText },
-  { label: "Library", href: "/library", icon: Book },
+  { label: "Study Chat", href: "/study-chat", icon: MessageCircle },
   { label: "AI Toolkit", href: "/assignments/new", icon: Sparkles },
 ];
 

@@ -87,6 +87,52 @@ Prerequisites: Node.js 20+ and Docker Desktop for MongoDB/Redis, or reachable Mo
 5. OpenRouter generates strict structured sections and questions; live events update the UI.
 6. The teacher edits or regenerates content as new revisions and downloads a protected student paper or answer-key PDF.
 
+## Study Chat
+
+Study Chat is a **separate product feature** from assessment generation — not an optional add-on to paper creation. Teachers open **Study Chat** in the sidebar and ask questions about extracted study documents.
+
+Under the hood it uses **pgvector top-8 retrieval** (OpenRouter embeddings) plus an **agentic grounding loop**:
+
+1. Draft an answer from the retrieved chunks
+2. Run a verifier agent (`grounded` JSON check against those chunks)
+3. If ungrounded: **retry once** with the unsupported claims listed
+4. If still ungrounded: **reject** the draft and return a safe refusal instead of inventing facts
+
+Malformed verifier JSON **fails closed** (treated as not grounded). Assistant messages persist `groundingStatus`, `retryCount`, and `latencyMs`.
+
+Assessment flows (`create-assignment`, extraction, `generatePaper`) never call this path.
+
+### Guardrail metrics (offline fixture eval)
+
+Run from `apps/api`:
+
+```bash
+npm run eval:rag-grounding
+```
+
+Latest fixture run (mocked retrieve + model; exercises the real verify → retry → reject path):
+
+| Metric | Value |
+|--------|------:|
+| Scenario match rate | **100%** (6/6) |
+| Hallucination reject rate | **100%** (3/3 intentional ungrounded cases) |
+| Accept accuracy | **100%** (3/3) |
+| p50 end-to-end latency | **~46 ms** (fixture path) |
+
+Optional live verifier check (needs `OPENROUTER_API_KEY`): `RAG_EVAL_LIVE=1 npm run eval:rag-grounding`.
+
+To enable locally:
+
+1. Start Postgres with pgvector: `docker compose up postgres -d`
+2. In `.env` set:
+   - `ENABLE_RAG=true`
+   - `DATABASE_URL=postgresql://paperpilot:paperpilot@localhost:5432/paperpilot_rag`
+   - `OPENROUTER_API_KEY` (also used for embeddings)
+   - optional `OPENROUTER_EMBEDDING_MODEL`, `OPENROUTER_CHAT_MODEL`, `RAG_TOP_K`, `RAG_MAX_ANSWER_ATTEMPTS` (default `2`)
+3. Restart API and worker. After a document is extracted, a fire-and-forget `document-rag-indexing` job embeds chunks into Postgres. Index failures never mark extraction as failed and never block paper generation.
+
+When Study Chat is not enabled on the server, the UI shows a setup empty state; assignments continue to work as before.
+
 ## Testing
 
 ```bash

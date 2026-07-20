@@ -15,6 +15,24 @@ services:
     volumes:
       - redis_data:/data
 
+  # Optional: used only by Study Chat (RAG). Assessment generation does not need this.
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: paperpilot
+      POSTGRES_PASSWORD: paperpilot
+      POSTGRES_DB: paperpilot_rag
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paperpilot -d paperpilot_rag"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   api:
     build:
       context: .
@@ -50,3 +68,4 @@ services:
 volumes:
   mongo_data:
   redis_data:
+  postgres_data:

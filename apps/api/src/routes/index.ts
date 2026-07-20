@@ -24,6 +24,13 @@ import {
   saveManualRevision,
   startGenerationRun,
 } from "../services/assignment.service.js";
+import {
+  createStudyChatSession,
+  getStudyChatFeatures,
+  getStudyChatSession,
+  listStudyChatSources,
+  postStudyChatMessage,
+} from "../services/study-chat.service.js";
 import { issuePdfAccess, issueSourceFileAccess } from "../services/file.service.js";
 import { GenerationRun, PdfExport, SourceDocument } from "../models/index.js";
 import { ApiError, asyncHandler } from "../utils/http.js";
@@ -134,6 +141,25 @@ apiRouter.post("/assignments/:assignmentId/manual-revision", asyncHandler(async 
 apiRouter.get("/generation-runs/:runId", asyncHandler(async (request, response) => {
   const run = await GenerationRun.findOne({ _id: routeParam(request, "runId"), workspaceId: request.auth!.workspaceId });
   response.json(run);
+}));
+
+apiRouter.get("/features", asyncHandler(async (_request, response) => {
+  response.json(getStudyChatFeatures());
+}));
+
+apiRouter.get("/study-chat/sources", asyncHandler(async (request, response) => {
+  response.json(await listStudyChatSources(request.auth!));
+}));
+apiRouter.post("/study-chat/sessions", asyncHandler(async (request, response) => {
+  const body = z.object({ sourceDocumentId: z.string().min(1) }).parse(request.body);
+  response.status(201).json(await createStudyChatSession(request.auth!, body.sourceDocumentId));
+}));
+apiRouter.get("/study-chat/sessions/:sessionId", asyncHandler(async (request, response) => {
+  response.json(await getStudyChatSession(request.auth!, routeParam(request, "sessionId")));
+}));
+apiRouter.post("/study-chat/sessions/:sessionId/messages", asyncHandler(async (request, response) => {
+  const body = z.object({ content: z.string().min(1).max(4000) }).parse(request.body);
+  response.status(201).json(await postStudyChatMessage(request.auth!, routeParam(request, "sessionId"), body.content));
 }));
 
 apiRouter.get("/assignments/:assignmentId/source", asyncHandler(async (request, response) => {

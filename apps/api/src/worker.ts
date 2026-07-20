@@ -1,10 +1,15 @@
 import express from "express";
 import { connectDatabase } from "./config/database.js";
+import { ragEnabled } from "./config/env.js";
 import { logger } from "./config/logger.js";
 import { startWorkers } from "./workers/processors.js";
 
 async function startWorkerProcess() {
   await connectDatabase();
+  if (ragEnabled()) {
+    const { ensureRagSchema } = await import("./services/rag/db.js");
+    await ensureRagSchema();
+  }
   const workers = startWorkers();
   logger.info({ count: workers.length }, "PaperPilot workers listening");
 

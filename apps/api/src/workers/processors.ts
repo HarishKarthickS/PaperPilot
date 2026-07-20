@@ -7,9 +7,11 @@ import { emitGenerationEvent } from "../socket/emitter.js";
 import { generatePaper, regenerateQuestion, regenerateSection, repairPaperForAssignment } from "../services/ai.service.js";
 import { buildAndStorePdf } from "../services/pdf.service.js";
 import { issueSourceFileAccess } from "../services/file.service.js";
+import { indexSourceDocument } from "../services/rag/index.service.js";
 import { ApiError } from "../utils/http.js";
-import { env } from "../config/env.js";
+import { env, ragEnabled } from "../config/env.js";
 import { logger } from "../config/logger.js";
+import { ragIndexQueue } from "../queues/index.js";
 
 const queueEvents: QueueEvents[] = [];
 
@@ -192,6 +194,24 @@ async function extractText(job: Job<{ sourceDocumentId: string }>) {
       { sourceDocumentId: source.id, extractedCharacters: source.extractedText.length, durationMs: Date.now() - startedAt },
       "Document extraction completed",
     );
+
+    // Study Chat indexing is fire-and-forget and must never fail extraction / block generation.
+    if (ragEnabled()) {
+      try {
+        source.ragIndexStatus = "queued";
+        source.ragIndexError = undefined;
+        await source.save();
+        await ragIndexQueue.add("index", { sourceDocumentId: source.id }, { attempts: 2 });
+      } catch (error) {
+        logger.warn(
+          {
+            sourceDocumentId: source.id,
+            error: error instanceof Error ? error.message : "RAG enqueue failed",
+          },
+          "RAG index enqueue skipped",
+        );
+      }
+    }
   } catch (error) {
     source.extractionStatus = "failed";
     source.extractionError = error instanceof Error ? error.message : "Text extraction failed.";
@@ -199,6 +219,54 @@ async function extractText(job: Job<{ sourceDocumentId: string }>) {
     logger.error(
       { sourceDocumentId: source.id, durationMs: Date.now() - startedAt, error: source.extractionError },
       "Document extraction failed",
+    );
+    throw error;
+  }
+}
+
+async function indexDocumentForRag(job: Job<{ sourceDocumentId: string }>) {
+  const startedAt = Date.now();
+  const source = await SourceDocument.findById(job.data.sourceDocumentId);
+  if (!source?.extractedText) return;
+  if (!ragEnabled()) return;
+
+  source.ragIndexStatus = "processing";
+  source.ragIndexError = undefined;
+  await source.save();
+  logger.info(
+    { queue: job.queueName, jobId: job.id, sourceDocumentId: source.id, attempt: job.attemptsMade + 1 },
+    "RAG indexing started",
+  );
+
+  try {
+    const result = await indexSourceDocument({
+      sourceDocumentId: source.id,
+      workspaceId: source.workspaceId.toString(),
+      extractedText: source.extractedText,
+    });
+    source.ragIndexStatus = "completed";
+    source.ragIndexedAt = new Date();
+    source.ragIndexError = undefined;
+    await source.save();
+    logger.info(
+      {
+        sourceDocumentId: source.id,
+        chunkCount: result.chunkCount,
+        durationMs: Date.now() - startedAt,
+      },
+      "RAG indexing completed",
+    );
+  } catch (error) {
+    source.ragIndexStatus = "failed";
+    source.ragIndexError = error instanceof Error ? error.message : "RAG indexing failed.";
+    await source.save();
+    logger.error(
+      {
+        sourceDocumentId: source.id,
+        durationMs: Date.now() - startedAt,
+        error: source.ragIndexError,
+      },
+      "RAG indexing failed",
     );
     throw error;
   }
@@ -246,6 +314,10 @@ export function startWorkers() {
     connection: bullConnection,
     concurrency: 2,
   });
+  const ragIndexWorker = new Worker("document-rag-indexing", indexDocumentForRag, {
+    connection: bullConnection,
+    concurrency: 1,
+  });
   const pdfWorker = new Worker(
     "pdf-export",
     async (job: Job<{ exportId: string }>) => {
@@ -279,6 +351,7 @@ export function startWorkers() {
   );
   attachWorkerLogging(generationWorker, "assessment-generation");
   attachWorkerLogging(extractionWorker, "document-extraction");
+  attachWorkerLogging(ragIndexWorker, "document-rag-indexing");
   attachWorkerLogging(pdfWorker, "pdf-export");
-  return [generationWorker, extractionWorker, pdfWorker];
+  return [generationWorker, extractionWorker, ragIndexWorker, pdfWorker];
 }

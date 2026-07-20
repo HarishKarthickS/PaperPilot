@@ -13,7 +13,8 @@
     "start": "node dist/server.js",
     "start:worker": "node dist/worker.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "eval:rag-grounding": "tsx scripts/rag-grounding-eval.ts"
   },
   "dependencies": {
     "@openrouter/sdk": "^0.12.35",
@@ -43,6 +44,7 @@
     "mongoose": "^8.12.1",
     "pdf-parse": "^1.1.1",
     "pdfmake": "^0.2.18",
+    "pg": "^8.22.0",
     "pino": "^9.6.0",
     "pino-http": "^10.4.0",
     "socket.io": "^4.8.1",
@@ -59,11 +61,13 @@
     "@types/node": "^22.13.5",
     "@types/pdf-parse": "^1.1.4",
     "@types/pdfmake": "^0.2.11",
+    "@types/pg": "^8.20.0",
     "@types/supertest": "^6.0.2",
     "@types/swagger-ui-express": "^4.1.8",
     "mongodb-memory-server": "^10.1.4",
     "supertest": "^7.1.0",
     "tsx": "^4.19.3",
+    "typescript": "^5.9.3",
     "vitest": "^3.0.9"
   }
 }

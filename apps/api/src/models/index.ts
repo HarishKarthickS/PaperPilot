@@ -112,10 +112,53 @@ const sourceDocumentSchema = new Schema(
     },
     extractedText: String,
     extractionError: String,
+    ragIndexStatus: {
+      type: String,
+      enum: ["idle", "queued", "processing", "completed", "failed"],
+      default: "idle",
+    },
+    ragIndexedAt: Date,
+    ragIndexError: String,
   },
   { timestamps: true },
 );
 sourceDocumentSchema.index({ workspaceId: 1, uploadedBy: 1, sourceDraftId: 1 });
+
+const studyChatSessionSchema = new Schema(
+  {
+    workspaceId: { type: Schema.Types.ObjectId, ref: "Workspace", required: true, index: true },
+    sourceDocumentId: { type: Schema.Types.ObjectId, ref: "SourceDocument", required: true, index: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    title: { type: String, required: true },
+  },
+  { timestamps: true },
+);
+
+const studyChatCitationSchema = new Schema(
+  {
+    chunkIndex: { type: Number, required: true },
+    snippet: { type: String, required: true },
+  },
+  { _id: false },
+);
+
+const studyChatMessageSchema = new Schema(
+  {
+    sessionId: { type: Schema.Types.ObjectId, ref: "StudyChatSession", required: true, index: true },
+    workspaceId: { type: Schema.Types.ObjectId, ref: "Workspace", required: true, index: true },
+    role: { type: String, enum: ["user", "assistant"], required: true },
+    content: { type: String, required: true },
+    citations: { type: [studyChatCitationSchema], default: [] },
+    groundingStatus: {
+      type: String,
+      enum: ["verified", "verified_after_retry", "rejected"],
+      required: false,
+    },
+    retryCount: { type: Number, min: 0, max: 1, required: false },
+    latencyMs: { type: Number, min: 0, required: false },
+  },
+  { timestamps: true },
+);
 
 const generatedQuestionSchema = new Schema(
   {
@@ -216,5 +259,7 @@ export const AssessmentRevision = registeredModel("AssessmentRevision", assessme
 export const GenerationRun = registeredModel("GenerationRun", generationRunSchema);
 export const PdfExport = registeredModel("PdfExport", pdfExportSchema);
 export const ActivityEvent = registeredModel("ActivityEvent", activityEventSchema);
+export const StudyChatSession = registeredModel("StudyChatSession", studyChatSessionSchema);
+export const StudyChatMessage = registeredModel("StudyChatMessage", studyChatMessageSchema);
 
 export type UserRecord = InferSchemaType<typeof userSchema>;
