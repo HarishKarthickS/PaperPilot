@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { Badge, Button } from "@veda/ui";
 import { GenerationBanner } from "@/components/generation-banner";
+import { PaperSheet, PaperSkeleton } from "@/components/paper-sheet";
 import { PaperView, type Section } from "@/components/paper-view";
 import { apiRequest, apiUrl, type Session } from "@/lib/api";
 import { generationDisplayState, type LatestRun } from "@/lib/generation-state";
@@ -143,7 +144,7 @@ export default function AssessmentPaperPage() {
               The latest generation request failed, but your previous paper is still available. {runState.userError}
             </div>
           )}
-          <div className="paper-toolbar mt-3 flex flex-wrap items-center gap-2 rounded-[12px] bg-white p-3 shadow-sm md:mt-4">
+          <div className="paper-toolbar paper-sheet mt-4 flex flex-wrap items-center gap-2 p-3 md:mt-5">
             <Button disabled={currentlyGenerating} onClick={() => downloadPdf("student")}><Download size={16} /> Student PDF</Button>
             <Button disabled={currentlyGenerating} variant="secondary" onClick={() => downloadPdf("teacher")}><Download size={16} /> Answer Key PDF</Button>
             <Button variant="secondary" onClick={() => setShowAnswers((current) => !current)}>
@@ -175,7 +176,7 @@ export default function AssessmentPaperPage() {
           />
         </>
       ) : isFailed && detail.data ? (
-        <div className="mt-4 rounded-[16px] bg-white p-8 shadow-sm md:p-10">
+        <PaperSheet className="mt-4 p-8 md:p-10">
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-3">
               <div className="rounded-full bg-[#fff1eb] p-3 text-[#f77755]">
@@ -193,16 +194,15 @@ export default function AssessmentPaperPage() {
               <RefreshCw size={16} /> Try again
             </Button>
           </div>
-        </div>
+        </PaperSheet>
       ) : detail.isError ? (
-        <div className="mt-5 rounded-[16px] bg-white p-10 text-center shadow-sm">
+        <PaperSheet className="mt-5 p-10 text-center">
           <p className="font-semibold">Assessment could not be loaded.</p>
           <Button className="mt-5" onClick={() => detail.refetch()}><RefreshCw size={16} /> Try again</Button>
-        </div>
+        </PaperSheet>
       ) : (
-        <div className="mt-4 rounded-[16px] bg-white p-10 text-center text-sm text-[#777] shadow-sm md:p-20">
-          <p>{runState.message}</p>
-          <div className="mx-auto mt-7 h-3 max-w-sm animate-pulse rounded-full bg-[#ededed]" />
+        <div className="mt-4">
+          <PaperSkeleton label={runState.message || "Preparing question paper…"} />
         </div>
       )}
     </section>

@@ -3,7 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { FileQuestion, GraduationCap, Sparkles, TrendingUp } from "lucide-react";
 import Link from "next/link";
-import { Card, Button } from "@veda/ui";
+import { Button } from "@veda/ui";
+import { PaperSheet, PaperSkeleton } from "@/components/paper-sheet";
 import { apiRequest } from "@/lib/api";
 
 type Dashboard = {
@@ -22,6 +23,14 @@ export default function DashboardPage() {
     { label: "Recent activity", value: dashboard.data?.recent.length || 0, icon: TrendingUp },
   ];
 
+  if (dashboard.isLoading) {
+    return (
+      <section className="mx-auto max-w-[1240px] py-6">
+        <PaperSkeleton label="Loading papers…" />
+      </section>
+    );
+  }
+
   return (
     <section className="mx-auto max-w-[1320px] py-6">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
@@ -33,17 +42,17 @@ export default function DashboardPage() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statistics.map(({ label, value, icon: Icon }) => (
-          <Card key={label} className="rounded-[8px] p-5">
+          <PaperSheet key={label} as="div" className="p-5">
             <Icon size={20} className="mb-6 text-[#ec6542]" />
-            <p className="text-3xl font-bold">{dashboard.isLoading ? "-" : value}</p>
+            <p className="text-3xl font-bold">{value}</p>
             <p className="mt-2 text-sm text-[#767676]">{label}</p>
-          </Card>
+          </PaperSheet>
         ))}
       </div>
-      <Card className="mt-6 rounded-[8px] p-5 md:p-7">
+      <PaperSheet className="mt-6 p-5 md:p-7">
         <h2 className="mb-5 text-lg font-bold">Recent assessments</h2>
         {!dashboard.data?.recent.length ? (
-          <p className="py-10 text-center text-sm text-[#888]">Your generated papers will appear here.</p>
+          <p className="py-10 text-center text-sm leading-7 text-[#888]">Your generated papers will appear here as exam sheets.</p>
         ) : (
           <div className="divide-y divide-[#ededed]">
             {dashboard.data.recent.map((item) => (
@@ -54,7 +63,7 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
-      </Card>
+      </PaperSheet>
     </section>
   );
 }

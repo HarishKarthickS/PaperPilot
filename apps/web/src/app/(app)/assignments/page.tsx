@@ -7,6 +7,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button, Input } from "@veda/ui";
 import { EmptyAssignments } from "@/components/empty-assignments";
+import { PaperSheet, PaperSkeleton } from "@/components/paper-sheet";
 import { apiRequest } from "@/lib/api";
 
 type Assignment = {
@@ -37,7 +38,7 @@ export default function AssignmentsPage() {
     <section className="mx-auto max-w-[1420px] pt-5 md:pt-7">
       <div className="mb-5 hidden md:block">
         <div className="flex items-center gap-2">
-          <span className="size-2.5 rounded-full bg-[#4caf50]" />
+          <span className="size-2.5 rounded-full bg-[#f66c48]" />
           <h1 className="text-2xl font-bold">Assignments</h1>
         </div>
         <p className="mt-1 text-[#909090]">Manage and create assignments for your classes.</p>
@@ -50,7 +51,15 @@ export default function AssignmentsPage() {
         </div>
       </div>
       {list.isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-44 animate-pulse rounded-[20px] bg-white" />)}</div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <PaperSkeleton key={index} compact />
+          ))}
+        </div>
+      ) : assignments.length === 0 ? (
+        <PaperSheet className="px-6 py-16 text-center">
+          <p className="text-sm leading-7 text-[#777]">No papers match that search.</p>
+        </PaperSheet>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {assignments.map((assignment, index) => (
@@ -59,7 +68,7 @@ export default function AssignmentsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.035 }}
               key={assignment._id}
-              className="relative flex min-h-[118px] flex-col justify-between rounded-[12px] bg-white p-5 shadow-sm md:min-h-[174px] md:p-7"
+              className="paper-sheet relative flex min-h-[118px] flex-col justify-between p-5 md:min-h-[174px] md:p-7"
             >
               <div className="pr-10">
                 <Link href={`/assignments/${assignment._id}`} className="text-lg font-bold md:text-2xl">{assignment.name}</Link>

@@ -43,9 +43,9 @@ describe("PaperView", () => {
       />,
     );
 
-    expect(screen.getByText("A.")).toBeVisible();
+    expect(screen.getByText("(A)")).toBeVisible();
     expect(screen.getByText("3")).toBeVisible();
-    expect(screen.getByText("C.")).toBeVisible();
+    expect(screen.getByText("(C)")).toBeVisible();
     expect(screen.getByText("8")).toBeVisible();
   });
 });

@@ -1,9 +1,10 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, Send, BookOpen } from "lucide-react";
+import { Send } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Button, Card, cn } from "@veda/ui";
+import { Button, cn } from "@veda/ui";
+import { PaperRule, PaperSheet, PaperSkeleton } from "@/components/paper-sheet";
 import { apiRequest } from "@/lib/api";
 
 type Features = { studyChatAvailable: boolean };
@@ -49,6 +50,20 @@ function statusLabel(status?: string) {
   if (status === "processing" || status === "queued") return "Indexing…";
   if (status === "failed") return "Index failed";
   return "Not indexed";
+}
+
+function pairMessages(messages: ChatMessage[]) {
+  const pairs: { user: ChatMessage; assistant?: ChatMessage }[] = [];
+  for (const message of messages) {
+    if (message.role === "user") {
+      pairs.push({ user: message });
+    } else if (pairs.length && !pairs[pairs.length - 1].assistant) {
+      pairs[pairs.length - 1].assistant = message;
+    } else {
+      pairs.push({ user: { ...message, role: "user", content: "" }, assistant: message });
+    }
+  }
+  return pairs;
 }
 
 export default function StudyChatPage() {
@@ -123,49 +138,54 @@ export default function StudyChatPage() {
   }
 
   if (features.isLoading) {
-    return <p className="py-16 text-center text-sm text-[#888]">Loading Study Chat…</p>;
+    return (
+      <section className="mx-auto max-w-[1240px] py-3 md:py-5">
+        <PaperSkeleton label="Loading Study Chat…" />
+      </section>
+    );
   }
 
   if (!features.data?.studyChatAvailable) {
     return (
-      <section className="mx-auto max-w-3xl py-10">
-        <Card className="rounded-[12px] p-8">
-          <MessageCircle className="mb-4 text-[#ec6542]" size={28} />
-          <h1 className="text-2xl font-bold">Study Chat</h1>
-          <p className="mt-3 text-sm leading-6 text-[#666]">
-            Study Chat is a separate feature for asking questions about your uploaded study material. It is
-            independent from assessment generation and is currently not enabled on this server.
+      <section className="mx-auto max-w-[760px] py-6 md:py-8">
+        <PaperSheet className="px-6 py-10 md:px-12 md:py-12">
+          <header className="text-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#888]">Study material</p>
+            <h1 className="mt-2 text-2xl font-bold">Study Chat</h1>
+            <PaperRule className="mx-auto mt-3 max-w-[200px]" />
+          </header>
+          <p className="mt-8 text-sm leading-7 text-[#555]">
+            Ask questions about extracted study documents from this same paper view. Study Chat is independent from
+            assessment generation and is not enabled on this server.
           </p>
-          <p className="mt-4 text-sm leading-6 text-[#666]">
+          <p className="mt-4 text-sm leading-7 text-[#555]">
             To enable it, set <code className="rounded bg-[#f5f5f5] px-1">ENABLE_RAG=true</code>, provide a
             Postgres pgvector <code className="rounded bg-[#f5f5f5] px-1">DATABASE_URL</code>, and ensure{" "}
             <code className="rounded bg-[#f5f5f5] px-1">OPENROUTER_API_KEY</code> is set. Then run{" "}
             <code className="rounded bg-[#f5f5f5] px-1">docker compose up postgres -d</code>.
           </p>
-        </Card>
+        </PaperSheet>
       </section>
     );
   }
 
-  return (
-    <section className="mx-auto flex max-w-[1100px] flex-col gap-5 py-6">
-      <div>
-        <h1 className="text-2xl font-bold md:text-3xl">Study Chat</h1>
-        <p className="mt-2 text-sm text-[#7e7e7e]">
-          Ask questions about extracted study documents. This does not change assessment generation.
-        </p>
-      </div>
+  const pairs = pairMessages(localMessages);
+  const paperTitle = session.data?.source?.fileName || selectedSource?.fileName || "Study Chat";
 
-      <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
-        <Card className="rounded-[12px] p-4">
-          <p className="mb-3 text-sm font-semibold">Source documents</p>
+  return (
+    <section className="mx-auto max-w-[1240px] py-3 md:py-5">
+      <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
+        <PaperSheet className="px-5 py-6 md:px-6 md:py-7">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#888]">Reference list</p>
+          <h2 className="mt-2 text-lg font-bold">Source documents</h2>
+          <PaperRule className="mt-3 max-w-[140px]" />
           {!sources.data?.length ? (
-            <p className="text-sm text-[#888]">
+            <p className="mt-6 text-sm leading-7 text-[#777]">
               No extracted documents yet. Upload material while creating an assessment, then return here.
             </p>
           ) : (
-            <ul className="space-y-2">
-              {sources.data.map((source) => (
+            <ol className="mt-5 space-y-3">
+              {sources.data.map((source, index) => (
                 <li key={source._id}>
                   <button
                     type="button"
@@ -175,113 +195,130 @@ export default function StudyChatPage() {
                       setLocalMessages([]);
                     }}
                     className={cn(
-                      "w-full rounded-[10px] border px-3 py-3 text-left transition",
+                      "w-full rounded-sm border px-3 py-2.5 text-left",
                       selectedSourceId === source._id
-                        ? "border-[#ec6542] bg-[#fff7f4]"
+                        ? "border-[#f66c48] bg-[#fff8f6]"
                         : "border-[#ececec] hover:border-[#d8d8d8]",
                     )}
                   >
-                    <span className="flex items-start gap-2">
-                      <BookOpen size={16} className="mt-0.5 shrink-0 text-[#ec6542]" />
-                      <span>
-                        <span className="block text-sm font-medium">{source.fileName}</span>
-                        <span className="mt-1 block text-xs text-[#888]">{statusLabel(source.ragIndexStatus)}</span>
-                      </span>
+                    <span className="block text-sm font-medium leading-5">
+                      {index + 1}. {source.fileName}
                     </span>
+                    <span className="mt-1 block text-xs text-[#888]">{statusLabel(source.ragIndexStatus)}</span>
                   </button>
                 </li>
               ))}
-            </ul>
+            </ol>
           )}
           <Button
-            className="mt-4 w-full"
+            className="mt-6 w-full"
             disabled={!selectedSourceId || startSession.isPending}
             onClick={() => startSession.mutate()}
           >
-            {startSession.isPending ? "Starting…" : "Start chat"}
+            {startSession.isPending ? "Opening paper…" : "Open paper"}
           </Button>
           {startSession.isError ? (
             <p className="mt-2 text-xs text-red-600">{(startSession.error as Error).message}</p>
           ) : null}
-        </Card>
+        </PaperSheet>
 
-        <Card className="flex min-h-[520px] flex-col rounded-[12px] p-4 md:p-5">
+        <PaperSheet className="flex min-h-[560px] flex-col px-5 py-7 md:px-10 md:py-10">
           {!sessionId ? (
             <div className="flex flex-1 flex-col items-center justify-center text-center">
-              <MessageCircle className="mb-3 text-[#ccc]" size={32} />
-              <p className="text-sm text-[#888]">Select a document and start a chat session.</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#888]">Working paper</p>
+              <h2 className="mt-3 text-xl font-bold">Select a document</h2>
+              <PaperRule className="mx-auto mt-3 max-w-[160px]" />
+              <p className="mt-5 max-w-sm text-sm leading-7 text-[#777]">
+                Choose a source from the reference list and open it as a paper to ask questions about the extracted
+                material.
+              </p>
               {selectedSource ? (
-                <p className="mt-2 text-xs text-[#aaa]">Index status: {statusLabel(selectedSource.ragIndexStatus)}</p>
+                <p className="mt-3 text-xs text-[#999]">Index status: {statusLabel(selectedSource.ragIndexStatus)}</p>
               ) : null}
             </div>
           ) : (
             <>
-              <div className="mb-4 border-b border-[#f0f0f0] pb-3">
-                <p className="font-semibold">{session.data?.source?.fileName || selectedSource?.fileName || "Study chat"}</p>
-                <p className="text-xs text-[#888]">
+              <header className="text-center">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#888]">Study Chat</p>
+                <h2 className="mt-2 text-xl font-bold leading-snug md:text-[22px]">{paperTitle}</h2>
+                <PaperRule className="mx-auto mt-3 max-w-[220px]" />
+                <p className="mt-3 text-xs text-[#888]">
                   Index: {statusLabel(session.data?.source?.ragIndexStatus || selectedSource?.ragIndexStatus)}
                 </p>
-              </div>
-              <div className="flex-1 space-y-4 overflow-y-auto pr-1">
-                {localMessages.length === 0 ? (
-                  <p className="py-10 text-center text-sm text-[#888]">Ask anything about this document.</p>
+              </header>
+
+              <div className="mt-8 flex-1 space-y-8">
+                {pairs.length === 0 ? (
+                  <p className="py-8 text-center text-sm leading-7 text-[#888]">
+                    Write a question below. Answers stay on this paper, with citations as footnotes.
+                  </p>
                 ) : (
-                  localMessages.map((message) => (
-                    <div
-                      key={message._id}
-                      className={cn(
-                        "max-w-[90%] rounded-[12px] px-4 py-3 text-sm leading-6",
-                        message.role === "user"
-                          ? "ml-auto bg-[#171717] text-white"
-                          : "mr-auto bg-[#f6f6f6] text-[#222]",
-                      )}
-                    >
-                      <p className="whitespace-pre-wrap">{message.content}</p>
-                      {message.role === "assistant" && groundingLabel(message.groundingStatus) ? (
-                        <p
-                          className={cn(
-                            "mt-2 text-xs font-medium",
-                            message.groundingStatus === "rejected" ? "text-amber-700" : "text-[#2f6f4e]",
-                          )}
-                        >
-                          {groundingLabel(message.groundingStatus)}
-                          {typeof message.latencyMs === "number" ? ` · ${message.latencyMs} ms` : null}
+                  pairs.map((pair, index) => (
+                    <div key={pair.user._id} className="text-sm leading-7">
+                      {pair.user.content ? (
+                        <p>
+                          <span className="font-bold">Q{index + 1}.</span> {pair.user.content}
                         </p>
                       ) : null}
-                      {message.role === "assistant" && message.citations?.length ? (
-                        <div className="mt-3 space-y-2 border-t border-[#e5e5e5] pt-3">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-[#888]">Citations</p>
-                          {message.citations.map((citation) => (
-                            <p key={`${message._id}-${citation.chunkIndex}`} className="text-xs text-[#666]">
-                              <span className="font-medium text-[#ec6542]">Chunk {citation.chunkIndex}:</span>{" "}
-                              {citation.snippet}
+                      {pair.assistant ? (
+                        <div className="mt-3">
+                          <p className="whitespace-pre-wrap text-[#333]">{pair.assistant.content}</p>
+                          {groundingLabel(pair.assistant.groundingStatus) ? (
+                            <p
+                              className={cn(
+                                "mt-2 text-xs",
+                                pair.assistant.groundingStatus === "rejected" ? "text-[#9a5a00]" : "text-[#555]",
+                              )}
+                            >
+                              {groundingLabel(pair.assistant.groundingStatus)}
+                              {typeof pair.assistant.latencyMs === "number" ? ` · ${pair.assistant.latencyMs} ms` : null}
                             </p>
-                          ))}
+                          ) : null}
+                          {pair.assistant.citations?.length ? (
+                            <ol className="mt-3 space-y-1 border-t border-dotted border-[#ddd] pt-3 text-xs text-[#666]">
+                              {pair.assistant.citations.map((citation) => (
+                                <li key={`${pair.assistant!._id}-${citation.chunkIndex}`}>
+                                  <span className="font-semibold text-[#f66c48]">[{citation.chunkIndex}]</span>{" "}
+                                  {citation.snippet}
+                                </li>
+                              ))}
+                            </ol>
+                          ) : null}
                         </div>
                       ) : null}
                     </div>
                   ))
                 )}
+                {sendMessage.isPending ? (
+                  <p className="text-sm italic text-[#888]">Writing answer…</p>
+                ) : null}
               </div>
-              <form onSubmit={onSubmit} className="mt-4 flex gap-2 border-t border-[#f0f0f0] pt-4">
-                <input
-                  value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
-                  placeholder="Ask a question about this material…"
-                  className="h-11 flex-1 rounded-[10px] border border-[#e5e5e5] px-3 text-sm outline-none focus:border-[#ec6542]"
-                  disabled={sendMessage.isPending}
-                />
-                <Button type="submit" disabled={sendMessage.isPending || !draft.trim()}>
-                  <Send size={16} />
-                  {sendMessage.isPending ? "Sending" : "Send"}
-                </Button>
+
+              <form onSubmit={onSubmit} className="mt-8 border-t border-[#ececec] pt-5">
+                <label htmlFor="study-question" className="text-xs font-semibold uppercase tracking-[0.12em] text-[#888]">
+                  Write your question
+                </label>
+                <div className="mt-2 flex gap-2">
+                  <input
+                    id="study-question"
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                    placeholder="Ask a question about this material…"
+                    className="h-11 flex-1 rounded-sm border-0 border-b border-[#d8d8d8] bg-transparent px-0 text-sm outline-none focus:border-[#f66c48]"
+                    disabled={sendMessage.isPending}
+                  />
+                  <Button type="submit" disabled={sendMessage.isPending || !draft.trim()}>
+                    <Send size={16} />
+                    {sendMessage.isPending ? "Sending" : "Send"}
+                  </Button>
+                </div>
               </form>
               {sendMessage.isError ? (
                 <p className="mt-2 text-xs text-red-600">{(sendMessage.error as Error).message}</p>
               ) : null}
             </>
           )}
-        </Card>
+        </PaperSheet>
       </div>
     </section>
   );

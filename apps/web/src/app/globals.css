@@ -50,9 +50,45 @@ select {
   background: #ffd8cc;
 }
 
+.paper-sheet {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.98)),
+    #ffffff;
+  color: #373737;
+  border-radius: 4px;
+  box-shadow:
+    0 1px 0 rgba(39, 39, 39, 0.06),
+    0 14px 32px rgba(22, 22, 22, 0.07);
+}
+
+.paper-sheet::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--accent);
+}
+
+.paper-rule {
+  height: 4px;
+  border-top: 1px solid #272727;
+  border-bottom: 1px solid #272727;
+}
+
+.paper-fill-line {
+  border-bottom: 1px dotted #b8b8b8;
+  min-width: 8rem;
+}
+
 @media print {
   .app-navigation,
   .paper-toolbar {
     display: none !important;
+  }
+
+  .paper-sheet {
+    box-shadow: none;
   }
 }

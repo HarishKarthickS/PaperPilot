@@ -264,7 +264,7 @@ export default function CreateAssignmentPage() {
       <div className="mb-6 flex items-center gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="hidden size-2.5 rounded-full bg-[#4caf50] md:block" />
+            <span className="hidden size-2.5 rounded-full bg-[#f66c48] md:block" />
             <h1 className="text-lg font-bold md:text-2xl">Create Assignment</h1>
           </div>
           <p className="hidden text-sm text-[#8e8e8e] md:block">Set up a new assignment for your students</p>
@@ -277,7 +277,7 @@ export default function CreateAssignmentPage() {
 
       <form onSubmit={submit}>
         {step === 1 ? (
-          <div className="rounded-[28px] border border-white bg-[#e8e8e8] p-4 md:p-8">
+          <div className="paper-sheet p-5 md:p-8">
             <h2 className="text-xl font-bold">Assignment Details</h2>
             <p className="mb-6 mt-1 text-sm text-[#777]">Basic information about your assignment</p>
             <input
@@ -351,7 +351,7 @@ export default function CreateAssignmentPage() {
             </div>
             <div className="space-y-3">
               {rows.fields.map((row, index) => (
-                <div key={row.id} className="grid gap-3 rounded-[20px] bg-white p-3 md:grid-cols-[1fr_116px_116px_30px] md:items-center">
+                <div key={row.id} className="grid gap-3 rounded-[4px] border border-[#ececec] bg-[#fafafa] p-3 md:grid-cols-[1fr_116px_116px_30px] md:items-center">
                   <div className="flex items-center gap-2">
                     <div className="relative w-full flex-1">
                       <Controller
@@ -421,7 +421,7 @@ export default function CreateAssignmentPage() {
           </div>
         ) : (
           <div className="grid gap-5 md:grid-cols-[1fr_300px]">
-            <div className="rounded-[28px] border border-white bg-[#e8e8e8] p-5 md:p-8">
+            <div className="paper-sheet p-5 md:p-8">
               <h2 className="text-xl font-bold">Generation Preferences</h2>
               <p className="mb-7 mt-1 text-sm text-[#777]">Guide the AI for a more relevant paper</p>
               <div className="mb-6 grid gap-4 md:grid-cols-3">
@@ -467,7 +467,7 @@ export default function CreateAssignmentPage() {
                 </div>
               </div>
             </div>
-            <aside className="rounded-[20px] bg-white p-5">
+            <aside className="paper-sheet p-5">
               <h3 className="font-bold">Paper Summary</h3>
               <div className="mt-5 space-y-3 text-sm">
                 <p className="flex justify-between"><span className="text-[#777]">Subject</span><strong>{form.watch("subject")}</strong></p>

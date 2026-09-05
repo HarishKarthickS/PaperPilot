@@ -3,9 +3,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, GraduationCap, Pencil, Save, ShieldCheck, UserRound, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Badge, Button, Card, Input, Label, cn } from "@veda/ui";
+import { Badge, Button, Input, Label, cn } from "@veda/ui";
 import { apiRequest, type Session } from "@/lib/api";
 import { fallbackAvatar, roleAvatarPresets } from "@/lib/avatar";
+import { PaperSheet } from "@/components/paper-sheet";
 
 export default function SettingsPage() {
   const queryClient = useQueryClient();
@@ -78,7 +79,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
-        <Card className="p-5 md:p-7">
+        <PaperSheet className="p-5 md:p-7">
           <div className="flex flex-col items-center text-center">
             <button
               type="button"
@@ -97,10 +98,10 @@ export default function SettingsPage() {
             <h2 className="mt-4 text-lg font-bold">{profile.name || user?.name || "Teacher"}</h2>
             <p className="mt-1 text-sm text-[#777]">{user?.email}</p>
           </div>
-        </Card>
+        </PaperSheet>
 
         <div className="space-y-5">
-          <Card className="p-5 md:p-7">
+          <PaperSheet className="p-5 md:p-7">
             <h2 className="mb-5 flex items-center gap-2 text-lg font-bold">
               <UserRound size={19} /> Profile
             </h2>
@@ -119,9 +120,9 @@ export default function SettingsPage() {
                 <Save size={16} /> {saveProfile.isPending ? "Saving" : "Save profile"}
               </Button>
             </div>
-          </Card>
+          </PaperSheet>
 
-          <Card className="p-5 md:p-7">
+          <PaperSheet className="p-5 md:p-7">
             <div className="mb-5 flex items-center justify-between gap-3">
               <h2 className="flex items-center gap-2 text-lg font-bold">
                 <GraduationCap size={20} /> School
@@ -155,7 +156,7 @@ export default function SettingsPage() {
                 </Button>
               </div>
             )}
-          </Card>
+          </PaperSheet>
         </div>
       </div>
 
@@ -163,7 +164,7 @@ export default function SettingsPage() {
       {error && <p className="mt-4 rounded-[8px] bg-red-50 p-3 text-sm text-red-700">{error instanceof Error ? error.message : "Settings could not be saved."}</p>}
       {avatarOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4" role="dialog" aria-modal="true" aria-labelledby="avatar-dialog-title">
-          <div className="w-full max-w-[520px] rounded-[8px] bg-white p-5 shadow-surface md:p-6">
+          <div className="paper-sheet w-full max-w-[520px] p-5 md:p-6">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 id="avatar-dialog-title" className="text-lg font-bold">Choose avatar</h2>
